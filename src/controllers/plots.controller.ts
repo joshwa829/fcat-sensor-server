@@ -1,5 +1,4 @@
 import { plotsDB, nodesDB } from '../models/db.index';
-import { v4 as uuidv4 } from 'uuid';
 import { Plot } from '../models/plots.model';
 import { Node } from '../models/nodes.model';
 import { RequestHandler } from 'express';
@@ -44,7 +43,16 @@ interface CreatePlotBody {
 export const createPlot: RequestHandler = async (req, res) => {
     try {
         const createPlotBody:CreatePlotBody = req.body;
-        const thisID = createPlotBody.plot.id ?? uuidv4();
+        let thisID = createPlotBody.plot.id;
+        if (!thisID) {
+            const allPlots = await plotsDB.findAll({ attributes: ['id'] }).then((plots) => plots.map((p) => p.toJSON() as Plot));
+            const existingIds = new Set(allPlots.map((p) => p.id));
+            let nextId = 0;
+            while (existingIds.has(nextId.toString())) {
+                nextId++;
+            }
+            thisID = nextId.toString();
+        }
         await plotsDB.create({
             ...createPlotBody.plot,
             id: thisID,
