@@ -1,5 +1,5 @@
-import { UUIDV4 } from 'sequelize';
 import { plotsDB, nodesDB } from '../models/db.index';
+import { v4 as uuidv4 } from 'uuid';
 import { Plot } from '../models/plots.model';
 import { Node } from '../models/nodes.model';
 import { RequestHandler } from 'express';
@@ -38,13 +38,13 @@ export const getPlot: RequestHandler = async (req, res) => {
 };
 
 interface CreatePlotBody {
-    plot:Omit<Partial<Plot>, 'id'>;
+    plot:Partial<Plot>;
 }
 
 export const createPlot: RequestHandler = async (req, res) => {
     try {
         const createPlotBody:CreatePlotBody = req.body;
-        const thisID = UUIDV4();
+        const thisID = createPlotBody.plot.id ?? uuidv4();
         await plotsDB.create({
             ...createPlotBody.plot,
             id: thisID,
@@ -64,7 +64,7 @@ export const createPlot: RequestHandler = async (req, res) => {
                 return;
             }
         }
-        const plot = await plotsDB.findOne({ where: { name: thisID } }).then((plot) => plot?.toJSON()) as Plot;
+        const plot = await plotsDB.findOne({ where: { id: thisID } }).then((plot) => plot?.toJSON()) as Plot;
         res.status(200).json({ plot });
     } catch (e) {
         res.status(500).json({ message: e });
