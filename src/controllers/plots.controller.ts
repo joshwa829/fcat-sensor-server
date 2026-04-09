@@ -63,6 +63,10 @@ export const createPlot: RequestHandler = async (req, res) => {
                 return jsonNode;
             });
             if (node) {
+                // Clear the old plot's nodeID if the node was previously assigned
+                if (node.plotID) {
+                    await plotsDB.update({ nodeID: null }, { where: { id: node.plotID } });
+                }
                 await nodesDB.update({
                     plotID: thisID,
                 }, { where: { id: createPlotBody.plot.nodeID },
